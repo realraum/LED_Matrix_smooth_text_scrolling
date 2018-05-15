@@ -1,5 +1,24 @@
 #include "OctoWS2811.h"
 #include "font.h"
+#include <SPI.h>
+#include <UIPEthernet.h>
+#include <PubSubClient.h>
+
+// Enter a MAC address for your controller below.
+// Newer Ethernet shields have a MAC address printed on a sticker on the shield
+byte mac[] = {
+  0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02
+};
+
+IPAddress myIP(192,168,0,6);
+IPAddress mqttServer(192,168,0,7);
+uint16_t mqttPort = 1883;
+
+EthernetClient ethClient;
+EthernetUDP udp;
+
+PubSubClient mqttClient;
+
 
 //fixed values for octoWS2811
 const int ledsPerStrip = 20;
@@ -26,6 +45,25 @@ int OFF = 0x000000;
 //DoubleFramebuffer
 uint8_t field[rows][ledsPerStrip][3];
 
+void initEth() {
+//  Ethernet.begin(mac);
+
+  if (Ethernet.begin(mac) == 0) {
+    //TODO: Reset the client  
+//    Serial.println("Failed to configure Ethernet using DHCP");
+    // no point in carrying on, so do nothing forevermore:
+//    for (;;)
+//      ;
+  }
+//  Serial.print("localIP: ");
+//  Serial.println(Ethernet.localIP());
+//  Serial.print("subnetMask: ");
+//  Serial.println(Ethernet.subnetMask());
+//  Serial.print("gatewayIP: ");
+//  Serial.println(Ethernet.gatewayIP());
+//  Serial.print("dnsServerIP: ");
+//  Serial.println(Ethernet.dnsServerIP());
+}
 
 void setup() {
   leds.begin(); // start the octows2811 library
@@ -49,6 +87,12 @@ void setup() {
       }
     }
   }
+
+  initEth();
+
+  // setup mqtt client
+  mqttClient.setClient(ethClient);
+  mqttClient.setServer(mqttServer, mqttPort);
 } //==end of setup()==//
 
 
